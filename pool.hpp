@@ -53,7 +53,7 @@ namespace tao
       {
         // make sure the item always has an owner.
         std::unique_ptr< T > up( item );
-        if( const std::shared_ptr< pool > p = pool_.lock() ) {
+        if( const auto p = pool_.lock() ) {
           p->push( up );
         }
       }
@@ -111,14 +111,14 @@ namespace tao
     // create a new item explicitly, does not re-use items from the pool.
     std::shared_ptr< T > create()
     {
-      return std::shared_ptr< T >( v_create().release(), deleter( this->shared_from_this() ) );
+      return { v_create().release(), deleter( this->shared_from_this() ) };
     }
 
     // retrieve a re-used (and valid) item from the pool if available,
     // return a newly created item otherwise.
     std::shared_ptr< T > get()
     {
-      while( const std::shared_ptr< T > sp = pull() ) {
+      while( const auto sp = pull() ) {
         if( v_is_valid( *sp ) ) {
           attach( sp, this->shared_from_this() );
           return sp;
