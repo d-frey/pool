@@ -112,7 +112,11 @@ namespace tao
       // create a new item explicitly, does not re-use items from the pool.
       std::shared_ptr< T > create()
       {
+#if( __cplusplus >= 201703L )
+         return { v_create().release(), deleter( this->weak_from_this() ) };
+#else
          return { v_create().release(), deleter( this->shared_from_this() ) };
+#endif
       }
 
       // retrieve a re-used (and valid) item from the pool if available,
@@ -121,7 +125,11 @@ namespace tao
       {
          while( const auto sp = pull() ) {
             if( v_is_valid( *sp ) ) {
+#if( __cplusplus >= 201703L )
+               attach( sp, this->weak_from_this() );
+#else
                attach( sp, this->shared_from_this() );
+#endif
                return sp;
             }
          }
